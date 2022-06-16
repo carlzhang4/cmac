@@ -8,7 +8,7 @@ import common.axi._
 import common.ToZero
 
 
-class CMAC (BOARD : String="u280") extends RawModule{
+class XCMAC (BOARD : String="u280") extends RawModule{
     require (Set("u50", "u280") contains BOARD)
 	
 	def getTCL(path:String = "Example: /home/amax/hhj/rdma_new2021/rdma2021/rdma2021.srcs/sources_1/ip") = {
