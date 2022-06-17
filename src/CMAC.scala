@@ -8,11 +8,24 @@ import common.axi._
 import common.ToZero
 
 
-class CMAC extends RawModule{
+class XCMAC (BOARD : String="u280") extends RawModule{
+    require (Set("u50", "u280") contains BOARD)
 	
 	def getTCL(path:String = "Example: /home/amax/hhj/rdma_new2021/rdma2021/rdma2021.srcs/sources_1/ip") = {
+        val board_inf = BOARD match {
+            case "u280" => "qsfp0_4x"
+            case "u50" => "qsfp_4x"
+        }
+        val diff_clk_inf = BOARD match {
+            case "u280" => "qsfp0_156mhz"
+            case "u50" => "qsfp_161mhz"
+        }
+        val ref_clk_freq = BOARD match {
+            case "u280" => "156.25"
+            case "u50" => "161.1328125"
+        }
 		val s1 = "create_ip -name cmac_usplus -vendor xilinx.com -library ip -version 3.1 -module_name CMACBlackBox\n"
-		val s2 = "set_property -dict [list CONFIG.CMAC_CAUI4_MODE {1} CONFIG.NUM_LANES {4x25} CONFIG.GT_REF_CLK_FREQ {156.25} CONFIG.USER_INTERFACE {AXIS} CONFIG.TX_FLOW_CONTROL {0} CONFIG.RX_FLOW_CONTROL {0} CONFIG.CMAC_CORE_SELECT {CMACE4_X0Y6} CONFIG.GT_GROUP_SELECT {X0Y40~X0Y43} CONFIG.LANE1_GT_LOC {X0Y40} CONFIG.LANE2_GT_LOC {X0Y41} CONFIG.LANE3_GT_LOC {X0Y42} CONFIG.LANE4_GT_LOC {X0Y43} CONFIG.LANE5_GT_LOC {NA} CONFIG.LANE6_GT_LOC {NA} CONFIG.LANE7_GT_LOC {NA} CONFIG.LANE8_GT_LOC {NA} CONFIG.LANE9_GT_LOC {NA} CONFIG.LANE10_GT_LOC {NA} CONFIG.RX_GT_BUFFER {1} CONFIG.GT_RX_BUFFER_BYPASS {0} CONFIG.ETHERNET_BOARD_INTERFACE {qsfp0_4x} CONFIG.DIFFCLK_BOARD_INTERFACE {qsfp0_156mhz} CONFIG.Component_Name {CMACBlackBox}] [get_ips CMACBlackBox]\n"
+		val s2 = f"set_property -dict [list CONFIG.CMAC_CAUI4_MODE {1} CONFIG.NUM_LANES {4x25} CONFIG.GT_REF_CLK_FREQ {${ref_clk_freq}} CONFIG.USER_INTERFACE {AXIS} CONFIG.TX_FLOW_CONTROL {0} CONFIG.RX_FLOW_CONTROL {0} CONFIG.CMAC_CORE_SELECT {CMACE4_X0Y6} CONFIG.GT_GROUP_SELECT {X0Y40~X0Y43} CONFIG.LANE1_GT_LOC {X0Y40} CONFIG.LANE2_GT_LOC {X0Y41} CONFIG.LANE3_GT_LOC {X0Y42} CONFIG.LANE4_GT_LOC {X0Y43} CONFIG.LANE5_GT_LOC {NA} CONFIG.LANE6_GT_LOC {NA} CONFIG.LANE7_GT_LOC {NA} CONFIG.LANE8_GT_LOC {NA} CONFIG.LANE9_GT_LOC {NA} CONFIG.LANE10_GT_LOC {NA} CONFIG.RX_GT_BUFFER {1} CONFIG.GT_RX_BUFFER_BYPASS {0} CONFIG.ETHERNET_BOARD_INTERFACE {${board_inf}} CONFIG.DIFFCLK_BOARD_INTERFACE {${diff_clk_inf}} CONFIG.Component_Name {CMACBlackBox}] [get_ips CMACBlackBox]\n"
 		val s3 = "generate_target {instantiation_template} [get_files %s/CMACBlackBox/CMACBlackBox.xci]\n"
 		val s4 = "update_compile_order -fileset sources_1\n"
 		println(s1 + s2 + s3.format(path) + s4)
