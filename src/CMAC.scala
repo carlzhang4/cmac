@@ -53,6 +53,8 @@ class XCMAC (BOARD : String="u280") extends RawModule{
 
     val fifo_tx_pkg         = withClockAndReset(io.net_clk,!io.net_rstn){XPacketQueue(512,512)}
 
+	val tx_reg_slice		= withClockAndReset(io.net_clk,!io.net_rstn){RegSlice(3)(fifo_tx_pkg.io.out)}
+
     val tx_padding          = withClockAndReset(io.user_clk,!io.user_arstn){Module(new Frame_Padding_512())}
 
     tx_padding.io.data_in           <> io.s_net_tx
@@ -166,11 +168,11 @@ class XCMAC (BOARD : String="u280") extends RawModule{
     cmac_inst.io.rx_axis_tlast          <> fifo_rx_data.io.in.bits.last
     cmac_inst.io.rx_axis_tkeep          <> fifo_rx_data.io.in.bits.keep
 
-    cmac_inst.io.tx_axis_tready              <> fifo_tx_pkg.io.out.ready
-    cmac_inst.io.tx_axis_tvalid              <> fifo_tx_pkg.io.out.valid
-    cmac_inst.io.tx_axis_tdata               <> fifo_tx_pkg.io.out.bits.data
-    cmac_inst.io.tx_axis_tlast               <> fifo_tx_pkg.io.out.bits.last
-    cmac_inst.io.tx_axis_tkeep               <> fifo_tx_pkg.io.out.bits.keep
+    cmac_inst.io.tx_axis_tvalid              <> tx_reg_slice.valid
+    cmac_inst.io.tx_axis_tready              <> tx_reg_slice.ready
+    cmac_inst.io.tx_axis_tdata               <> tx_reg_slice.bits.data
+    cmac_inst.io.tx_axis_tlast               <> tx_reg_slice.bits.last
+    cmac_inst.io.tx_axis_tkeep               <> tx_reg_slice.bits.keep
     cmac_inst.io.tx_axis_tuser               <> 0.U
         //ctrl interface
     
@@ -240,5 +242,4 @@ class Frame_Padding_512 extends Module{
 			}
 		}
 	}
-
 }
