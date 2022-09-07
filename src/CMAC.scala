@@ -51,15 +51,15 @@ class XCMAC (BOARD : String="u280") extends RawModule{
     val fifo_tx_data        = XConverter(new AXIS(512), io.user_clk, io.user_arstn, io.net_clk)
     val fifo_rx_data        = XConverter(new AXIS(512), io.net_clk, io.user_arstn, io.user_clk)
 
-    val fifo_tx_pkg         = withClockAndReset(io.net_clk,!io.net_rstn){XPacketQueue(512,512)}
-
-	val tx_reg_slice		= withClockAndReset(io.net_clk,!io.net_rstn){RegSlice(3)(fifo_tx_pkg.io.out)}
+    val fifo_tx_pkg         = withClockAndReset(io.net_clk,!io.user_arstn){XPacketQueue(512,512)}
 
     val tx_padding          = withClockAndReset(io.user_clk,!io.user_arstn){Module(new Frame_Padding_512())}
 
     tx_padding.io.data_in           <> io.s_net_tx
-    fifo_tx_data.io.in               <> tx_padding.io.data_out
-    fifo_tx_pkg.io.in              <> fifo_tx_data.io.out
+    fifo_tx_data.io.in             	<> withClockAndReset(io.user_clk,!io.user_arstn){RegSlice(2)(tx_padding.io.data_out)}
+    fifo_tx_pkg.io.in              	<> fifo_tx_data.io.out
+
+	val tx_regdelay					= withClockAndReset(io.net_clk,!io.user_arstn){RegSlice(1)(fifo_tx_pkg.io.out)}
 
     io.m_net_rx                     <> fifo_rx_data.io.out    
 
@@ -168,11 +168,11 @@ class XCMAC (BOARD : String="u280") extends RawModule{
     cmac_inst.io.rx_axis_tlast          <> fifo_rx_data.io.in.bits.last
     cmac_inst.io.rx_axis_tkeep          <> fifo_rx_data.io.in.bits.keep
 
-    cmac_inst.io.tx_axis_tvalid              <> tx_reg_slice.valid
-    cmac_inst.io.tx_axis_tready              <> tx_reg_slice.ready
-    cmac_inst.io.tx_axis_tdata               <> tx_reg_slice.bits.data
-    cmac_inst.io.tx_axis_tlast               <> tx_reg_slice.bits.last
-    cmac_inst.io.tx_axis_tkeep               <> tx_reg_slice.bits.keep
+    cmac_inst.io.tx_axis_tvalid              <> tx_regdelay.valid
+    cmac_inst.io.tx_axis_tready              <> tx_regdelay.ready
+    cmac_inst.io.tx_axis_tdata               <> tx_regdelay.bits.data
+    cmac_inst.io.tx_axis_tlast               <> tx_regdelay.bits.last
+    cmac_inst.io.tx_axis_tkeep               <> tx_regdelay.bits.keep
     cmac_inst.io.tx_axis_tuser               <> 0.U
         //ctrl interface
     
