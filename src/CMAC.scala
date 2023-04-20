@@ -49,9 +49,9 @@ class XCMAC (BOARD : String="u280") extends RawModule{
 
 
     val fifo_tx_data        = XConverter(new AXIS(512), io.user_clk, io.user_arstn, io.net_clk)
-    val fifo_rx_data        = XConverter(new AXIS(512), io.net_clk, io.user_arstn, io.user_clk)
+    val fifo_rx_data        = XConverter(new AXIS(512), io.net_clk, io.net_rstn, io.user_clk)
 
-    val fifo_tx_pkg         = withClockAndReset(io.net_clk,!io.user_arstn){XPacketQueue(512,512)}
+    val fifo_tx_pkg         = withClockAndReset(io.net_clk,!io.net_rstn){XPacketQueue(512,512)}
 
     val tx_padding          = withClockAndReset(io.user_clk,!io.user_arstn){Module(new Frame_Padding_512())}
 
@@ -59,7 +59,7 @@ class XCMAC (BOARD : String="u280") extends RawModule{
     fifo_tx_data.io.in             	<> withClockAndReset(io.user_clk,!io.user_arstn){RegSlice(2)(tx_padding.io.data_out)}
     fifo_tx_pkg.io.in              	<> fifo_tx_data.io.out
 
-	val tx_regdelay					= withClockAndReset(io.net_clk,!io.user_arstn){RegSlice(1)(fifo_tx_pkg.io.out)}
+	val tx_regdelay					= withClockAndReset(io.net_clk,!io.net_rstn){RegSlice(1)(fifo_tx_pkg.io.out)}
 
     io.m_net_rx                     <> fifo_rx_data.io.out    
 
