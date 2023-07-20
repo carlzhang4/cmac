@@ -3,7 +3,8 @@ package cmac
 import chisel3._
 import chisel3.util._
 
-class CMACBlackBox extends BlackBox{
+class CMACBlackBox(IP_CORE_NAME: String="CMACBlackBox") extends BlackBox{
+    override val desiredName = IP_CORE_NAME
 	val io = IO(new Bundle{
         
 		val sys_reset 					= Input(Bool())
